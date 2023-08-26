@@ -73,7 +73,13 @@ const SignupPageLink = styled(Link)`
   }
 `;
 
-const LoginForm = ({ onChange, onSubmit }) => {
+const ErrorMessage = styled.div`
+  color: red;
+  font-size: 13px;
+  padding: 0 14px;
+`;
+
+const LoginForm = ({ form, onChange, onSubmit, error }) => {
   return (
     <LoginFormWrapper>
       <LoginText>LOGIN</LoginText>
@@ -82,14 +88,17 @@ const LoginForm = ({ onChange, onSubmit }) => {
           type="text"
           placeholder="이메일을 입력해주세요."
           name="email"
+          value={form.email}
           onChange={onChange}
         />
         <LoginInput
           type="password"
           placeholder="비밀번호를 입력해주세요."
           name="password"
+          value={form.password}
           onChange={onChange}
         />
+        {error !== null && <ErrorMessage>{error.message}</ErrorMessage>}
         <LoginButton>로그인</LoginButton>
       </form>
       <SignupPageLink to={`/signup`}>

@@ -73,7 +73,13 @@ const LoginPageLink = styled(Link)`
   }
 `;
 
-const SignupForm = ({ onChange, onBlur, onSubmit }) => {
+const ErrorMessage = styled.div`
+  color: red;
+  font-size: 14px;
+  padding: 0 14px;
+`;
+
+const SignupForm = ({ form, onChange, onBlur, onSubmit, error }) => {
   return (
     <SignupFormWrapper>
       <SignupText>SIGN UP</SignupText>
@@ -82,30 +88,46 @@ const SignupForm = ({ onChange, onBlur, onSubmit }) => {
           type="text"
           placeholder="이메일을 입력해주세요."
           name="email"
+          value={form.email}
           onChange={onChange}
           onBlur={onBlur}
         />
+        {error.email !== null && error.email !== "success" && (
+          <ErrorMessage>{error.email}</ErrorMessage>
+        )}
         <SignupInput
           type="password"
           placeholder="비밀번호를 입력해주세요."
           name="password"
+          value={form.password}
           onChange={onChange}
           onBlur={onBlur}
         />
+        {error.password !== null && error.password !== "success" && (
+          <ErrorMessage>{error.password}</ErrorMessage>
+        )}
         <SignupInput
           type="text"
           placeholder="닉네임을 입력해주세요."
           name="nickname"
+          value={form.nickname}
           onChange={onChange}
           onBlur={onBlur}
         />
+        {error.nickname !== null && error.nickname !== "success" && (
+          <ErrorMessage>{error.nickname}</ErrorMessage>
+        )}
         <SignupInput
           type="text"
           placeholder="전화번호를 입력해주세요."
           name="phoneNumber"
+          value={form.phoneNumber}
           onChange={onChange}
           onBlur={onBlur}
         />
+        {error.phoneNumber !== null && error.phoneNumber !== "success" && (
+          <ErrorMessage>{error.phoneNumber}</ErrorMessage>
+        )}
         <SignupButton>회원가입</SignupButton>
       </form>
       <LoginPageLink to={`/login`}>
