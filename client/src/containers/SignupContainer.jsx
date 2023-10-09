@@ -1,12 +1,9 @@
 import React, { useEffect } from "react";
 import SignupForm from "../components/SignupForm";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  changeField,
-  initializeForm,
-  setSignupError,
-  signup,
-} from "../store/actions/auth";
+import * as authAction from "../store/actions/auth";
+import * as userAction from "../store/actions/user";
+import { useNavigate } from "react-router-dom";
 
 const formKeyMap = {
   email: "이메일",
@@ -31,15 +28,17 @@ const regexErrorMap = {
 };
 
 const SignupContainer = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const form = useSelector((state) => state.auth.form.signup);
   const error = useSelector((state) => state.auth.error.signup);
+  const response = useSelector((state) => state.auth.response);
 
   const onChange = (e) => {
     const { name, value } = e.target;
     dispatch(
-      changeField({
+      authAction.changeField({
         form: "signup",
         key: name,
         value: value,
@@ -56,7 +55,7 @@ const SignupContainer = () => {
   const regexCheck = (name, value) => {
     if (value === "") {
       dispatch(
-        setSignupError({
+        authAction.setSignupError({
           key: name,
           message: `${formKeyMap[name]}: 필수 정보입니다.`,
         })
@@ -73,7 +72,7 @@ const SignupContainer = () => {
             if (!value.includes("-")) {
               // - 없는 경우
               dispatch(
-                changeField({
+                authAction.changeField({
                   form: "signup",
                   key: name,
                   value: value.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3"),
@@ -88,7 +87,7 @@ const SignupContainer = () => {
           } else {
             // 정규식 통과 실패
             dispatch(
-              setSignupError({
+              authAction.setSignupError({
                 key: name,
                 message: `${formKeyMap[name]}: ${regexErrorMap[name]}`,
               })
@@ -101,9 +100,9 @@ const SignupContainer = () => {
             if (!value.includes("-")) {
               // - 없는 경우
               if (value.length === 11) {
-                // 000-0000-0000
+                // 000-0000-0000 인 경우
                 dispatch(
-                  changeField({
+                  authAction.changeField({
                     form: "signup",
                     key: name,
                     value: value.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3"),
@@ -111,9 +110,9 @@ const SignupContainer = () => {
                 );
               }
               if (value.length === 10) {
-                // 000-000-0000
+                // 000-000-0000 인 경우
                 dispatch(
-                  changeField({
+                  authAction.changeField({
                     form: "signup",
                     key: name,
                     value: value.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3"),
@@ -129,7 +128,7 @@ const SignupContainer = () => {
           } else {
             // 정규식 통과 실패
             dispatch(
-              setSignupError({
+              authAction.setSignupError({
                 key: name,
                 message: `${formKeyMap[name]}: ${regexErrorMap[name]}`,
               })
@@ -145,7 +144,7 @@ const SignupContainer = () => {
             duplicatedCheck(name, value);
           } else {
             dispatch(
-              setSignupError({
+              authAction.setSignupError({
                 key: name,
                 message: "success",
               })
@@ -154,7 +153,7 @@ const SignupContainer = () => {
         } else {
           // 정규식 통과 실패
           dispatch(
-            setSignupError({
+            authAction.setSignupError({
               key: name,
               message: `${formKeyMap[name]}: ${regexErrorMap[name]}`,
             })
@@ -166,24 +165,12 @@ const SignupContainer = () => {
 
   // 중복 검사 함수
   const duplicatedCheck = (name, value) => {
-    // TODO: 중복 검사 진행
-
-    if (!!true) {
-      // 중복 체크 통과
-      dispatch(
-        setSignupError({
-          key: name,
-          message: "success",
-        })
-      );
-    } else {
-      dispatch(
-        setSignupError({
-          key: name,
-          message: `${formKeyMap[name]}: 이미 사용중인 ${formKeyMap[name]}입니다`,
-        })
-      );
-    }
+    dispatch(
+      authAction.duplicatedCheck({
+        key: name,
+        value: value,
+      })
+    );
   };
 
   const onSubmit = (e) => {
@@ -196,7 +183,7 @@ const SignupContainer = () => {
       error.nickname === "success" &&
       error.phoneNumber === "success"
     ) {
-      dispatch(signup(form));
+      dispatch(authAction.signup(form));
     } else {
       if (error.email !== "success") {
         regexCheck("email", email);
@@ -218,11 +205,79 @@ const SignupContainer = () => {
 
   // 컴포넌트 처음 로딩 시 실행
   useEffect(() => {
-    dispatch(initializeForm("signup"));
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) {
+      // localStorage에 토큰 있는 경우
+      dispatch(userAction.setAccessToken(accessToken));
+    } else {
+      dispatch(authAction.initializeForm());
+    }
   }, [dispatch]);
 
-  // 회원가입 성공 / 실패 처리
-  useEffect(() => {}, []);
+  // api 요청 성공 / 실패 처리
+  useEffect(() => {
+    // 이메일 중복 체크 성공
+    if (response.code === "DUPLICATED_EMAIL_CHECK_SUCCESSFUL") {
+      dispatch(
+        authAction.setSignupError({
+          key: "email",
+          message: "success",
+        })
+      );
+    }
+
+    // 휴대전화번호 중복 체크 성공
+    if (response.code === "DUPLICATED_PHONENUMBER_CHECK_SUCCESSFUL") {
+      dispatch(
+        authAction.setSignupError({
+          key: "phoneNumber",
+          message: "success",
+        })
+      );
+    }
+
+    // 이메일 중복 체크 실패
+    if (response.code === "DUPLICATED_EMAIL") {
+      dispatch(
+        authAction.setSignupError({
+          key: "email",
+          message: `${formKeyMap.email}: ${response.message}`,
+        })
+      );
+    }
+
+    // 휴대전화번호 중복 체크 실패
+    if (response.code === "DUPLICATED_PHONENUMBER") {
+      dispatch(
+        authAction.setSignupError({
+          key: "phoneNumber",
+          message: `${formKeyMap.phoneNumber}: ${response.message}`,
+        })
+      );
+    }
+
+    // 회원가입 성공
+    if (response.code === "SIGNUP_SUCCESSFUL") {
+      alert("회원가입 성공");
+      navigate("/login");
+
+      return () => {
+        dispatch(authAction.initializeForm());
+      };
+    }
+
+    // 회원가입 실패
+    if (response.code === "VALIDATION_ERROR") {
+      for (let key in response.errors) {
+        dispatch(
+          authAction.setSignupError({
+            key: key,
+            message: `${formKeyMap[key]}: ${response.errors[key]}`,
+          })
+        );
+      }
+    }
+  }, [response, dispatch, navigate]);
 
   return (
     <SignupForm

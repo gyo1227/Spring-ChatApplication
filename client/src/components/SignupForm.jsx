@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { styled } from "styled-components";
+import { PAGE_PATH } from "../utils/constants";
 
 const SignupFormWrapper = styled.div`
   h3 {
@@ -130,7 +131,7 @@ const SignupForm = ({ form, onChange, onBlur, onSubmit, error }) => {
         )}
         <SignupButton>회원가입</SignupButton>
       </form>
-      <LoginPageLink to={`/login`}>
+      <LoginPageLink to={PAGE_PATH.LOGIN}>
         Already have an account?
         <span>Sign in</span>
       </LoginPageLink>

@@ -5,6 +5,12 @@ export const INITIALIZE_FORM = "auth/INITIALIZE_FORM";
 
 export const CHANGE_FIELD = "auth/CHANGE_FIELD";
 
+export const [
+  DUPLICATED_CHECK,
+  DUPLICATED_CHECK_SUCCESS,
+  DUPLICATED_CHECK_FAILURE,
+] = createRequestActionType("auth/DUPLICATED_CHECK");
+
 export const [SIGNUP, SIGNUP_SUCCESS, SIGNUP_FAILURE] =
   createRequestActionType("auth/SIGNUP");
 
@@ -15,12 +21,20 @@ export const SET_SIGNUP_ERROR = "auth/SET_SIGNUP_ERROR";
 
 export const SET_LOGIN_ERROR = "auth/SET_LOGIN_ERROR";
 
-export const initializeForm = createAction(INITIALIZE_FORM, (form) => form);
+export const initializeForm = createAction(INITIALIZE_FORM);
 
 export const changeField = createAction(
   CHANGE_FIELD,
   ({ form, key, value }) => ({
     form,
+    key,
+    value,
+  })
+);
+
+export const duplicatedCheck = createAction(
+  DUPLICATED_CHECK,
+  ({ key, value }) => ({
     key,
     value,
   })
